@@ -1,37 +1,32 @@
-## Welcome to GitHub Pages
+var env = require('./config.json'),
+    InsomBot = require('./insombot/index.js'),
+    Discord = require('discord.js');
 
-You can use the [editor on GitHub](https://github.com/IrvinLP/bot1/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
+var ins = new InsomBot;
+var discordjs = new Discord.Client();
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+discordjs.on("ready", function () {
+    console.log("Ready to begin! Serving in " + discordjs.channels.length + " channels");
+});
 
-### Markdown
+discordjs.on('message', function(msg)
+{
+    if (typeof ins.loadKeywords() !== 'undefined' && ins.loadKeywords().length > 0) {
+        ins.checkMessageForKeywords(msg.content, ins.loadKeywords(), function(keyword)
+        {
+            if (keyword != 0) {
+                ins.runKeywordFunction(ins.getKeyByValue(ins.keywords, keyword), keyword, msg, function(reply)
+                {
+                    discordjs.reply(msg, reply);
+                });
+            }
+        });
+    }
+});
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+discordjs.on('disconnected', function () {
+    console.log('Disconnected.');
+    process.exit(1);
+});
 
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/IrvinLP/bot1/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+discordjs.login(env.discord.email, env.discord.password);
